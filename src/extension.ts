@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
 import { JavaClassEditorProvider } from './javaClassEditor';
-import { execute } from 'njar';
-import { join } from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Register our custom editor providers
