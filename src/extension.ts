@@ -13,5 +13,6 @@ export function activate(context: vscode.ExtensionContext) {
 			let file = files[i];
 			await JavaClassEditorProvider.DecompileFile(file,context,null);
 		}
+		vscode.window.showInformationMessage(`Completed decompilation: ${vscode.workspace.asRelativePath(e)}`);
     }));
 }

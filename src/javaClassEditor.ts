@@ -45,6 +45,7 @@ export class JavaClassEditorProvider implements vscode.CustomReadonlyEditorProvi
 				}
 				if(webviewPanel) webviewPanel.webview.html += `<code>${content}<code>`;
 			}
+			if(!webviewPanel && fileExists){return;}
 			const file = await vscode.workspace.openTextDocument(newfileuri);
 			const editor = await vscode.window.showTextDocument(file,1,webviewPanel == null);
 			if(!fileExists){
