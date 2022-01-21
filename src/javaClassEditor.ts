@@ -45,22 +45,27 @@ export class JavaClassEditorProvider implements vscode.CustomReadonlyEditorProvi
 				}
 				if(webviewPanel) webviewPanel.webview.html += `<code>${content}<code>`;
 			}
-			if(!webviewPanel && fileExists){return;}
-			const file = await vscode.workspace.openTextDocument(newfileuri);
-			const editor = await vscode.window.showTextDocument(file,1,webviewPanel == null);
-			if(!fileExists){
-				await editor.edit(edit=>{
-					edit.delete(//Delete the entire contents of the file
-						new vscode.Range(
-							new vscode.Position(0,0),
-							editor.document.lineAt(editor.document.lineCount-1).range.end
-						)
-					);
-					edit.insert(new vscode.Position(0, 0), content);//Replace with new contents
-				});
+			if(webviewPanel){
+				const file = await vscode.workspace.openTextDocument(newfileuri);
+				const editor = await vscode.window.showTextDocument(file,1,false);
+				if(!fileExists){
+					await editor.edit(edit=>{
+						edit.delete(//Delete the entire contents of the file
+							new vscode.Range(
+								new vscode.Position(0,0),
+								editor.document.lineAt(editor.document.lineCount-1).range.end
+							)
+						);
+						edit.insert(new vscode.Position(0, 0), content);//Replace with new contents
+					});
+				}
+				webviewPanel.dispose();
 			}
-			if(webviewPanel) webviewPanel.dispose();
-			else await file.save();
+			else{
+				if(!fileExists){
+					await vscode.workspace.fs.writeFile(newfileuri.with({scheme:'file'}),Buffer.from(content,'utf-8'));
+				}
+			}
 		}catch(e){
 			if(webviewPanel) webviewPanel.webview.html += `<div>ERROR: ${e}</div>`;
 		}

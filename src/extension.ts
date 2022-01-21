@@ -9,10 +9,20 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('javaCFRDecompiler.decompileInFolder', async (e: vscode.Uri) => {
 		let pattern = new vscode.RelativePattern(e,'**/*.class');
 		let files = await vscode.workspace.findFiles(pattern);
-		for(let i in files){
-			let file = files[i];
-			await JavaClassEditorProvider.DecompileFile(file,context,null);
-		}
-		vscode.window.showInformationMessage(`Completed decompilation: ${vscode.workspace.asRelativePath(e)}`);
+		await vscode.window.withProgress({
+			location:vscode.ProgressLocation.Notification,
+			cancellable:true
+		},
+		async(progress,token)=>{
+			let inc = 1/files.length*100;
+			for(const file of files){
+				progress.report({
+					message:`Decompiling: ${vscode.workspace.asRelativePath(file)}`,
+					increment: inc
+				});
+				await JavaClassEditorProvider.DecompileFile(file,context,null)
+				if(token.isCancellationRequested) return;
+			}
+		});
     }));
 }
