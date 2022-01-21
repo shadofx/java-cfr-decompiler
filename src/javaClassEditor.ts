@@ -18,16 +18,16 @@ export class JavaClassEditorProvider implements vscode.CustomReadonlyEditorProvi
 	openCustomDocument(uri: vscode.Uri, openContext: vscode.CustomDocumentOpenContext, token: vscode.CancellationToken): JavaClassDocument {
 		return new JavaClassDocument(uri);
 	}
-	async resolveCustomEditor(document: JavaClassDocument, webviewPanel: vscode.WebviewPanel, token: vscode.CancellationToken): Promise<void> {
+	static async DecompileFile(uri:vscode.Uri,context:vscode.ExtensionContext,webviewPanel:vscode.WebviewPanel|null):Promise<void>{
 		try{
-			const parsedpath = parse(document.uri.fsPath);
+			const parsedpath = parse(uri.fsPath);
 			const newfile = join(parsedpath.dir,parsedpath.name+'.java');//create prospective new java file path
-			webviewPanel.webview.html += '<div>NEWFILE: '+newfile+'</div>';
+			if(webviewPanel) webviewPanel.webview.html += `<div>NEWFILE: ${newfile}</div>`;
 			let newfileuri = vscode.Uri.file(newfile);
 			let fileExists = false;
 			try{
 				let newFileStat = await vscode.workspace.fs.stat(newfileuri);
-				let classFileStat = await vscode.workspace.fs.stat(document.uri);
+				let classFileStat = await vscode.workspace.fs.stat(uri);
 				fileExists = newFileStat.mtime > classFileStat.mtime
 				newfileuri = newfileuri.with({scheme:'file'});
 			}catch{
@@ -37,12 +37,13 @@ export class JavaClassEditorProvider implements vscode.CustomReadonlyEditorProvi
 			let content = "";
 			if(!fileExists){
 				try{
-					content = await execute(join(this.context.extensionPath,'cfr-0.152.jar'),[document.uri.fsPath]);
+					content = await execute(join(context.extensionPath,'cfr-0.152.jar'),[uri.fsPath]);
 				}catch(e){
-					webviewPanel.webview.html += `<h1>Decompilation Error</h1><code>${e}</code>`;
+					if(webviewPanel) webviewPanel.webview.html += `<h1>Decompilation Error</h1><code>${e}</code>`;
+					else vscode.window.showErrorMessage(`Failed to decompile ${vscode.workspace.asRelativePath(uri)} : ${e}`);
 					return;
 				}
-				webviewPanel.webview.html += '<code>'+content+'<code>';
+				if(webviewPanel) webviewPanel.webview.html += `<code>${content}<code>`;
 			}
 			const file = await vscode.workspace.openTextDocument(newfileuri);
 			const editor = await vscode.window.showTextDocument(file,1,false);
@@ -57,9 +58,13 @@ export class JavaClassEditorProvider implements vscode.CustomReadonlyEditorProvi
 					edit.insert(new vscode.Position(0, 0), content);//Replace with new contents
 				});
 			}
-			webviewPanel.dispose();
+			if(webviewPanel) webviewPanel.dispose();
+			else await file.save();
 		}catch(e){
-			webviewPanel.webview.html += '<div>ERROR: '+e+'</div>';
+			if(webviewPanel) webviewPanel.webview.html += `<div>ERROR: ${e}</div>`;
 		}
+	}
+	async resolveCustomEditor(document: JavaClassDocument, webviewPanel: vscode.WebviewPanel, token: vscode.CancellationToken): Promise<void> {
+		await JavaClassEditorProvider.DecompileFile(document.uri,this.context,webviewPanel);
 	}
 }

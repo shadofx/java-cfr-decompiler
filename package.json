@@ -2,7 +2,7 @@
 	"name": "java-cfr-decompiler",
 	"displayName": "Java CFR Decompiler",
 	"description": "Decompiles .class file into .java file. Uses CFR 0.152.",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher": "perennialinnocence",
 	"private": true,
 	"license": "MIT",
@@ -17,7 +17,9 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCustomEditor:javaCFRDecompiler.javaClass"
+		"onCustomEditor:javaCFRDecompiler.javaClass",
+        "onCommand:javaCFRDecompiler.decompileInFolder",
+		"workspaceContains:**/*.class"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -31,7 +33,22 @@
 					}
 				]
 			}
-		]
+		],
+        "commands": [
+            {
+                "command": "javaCFRDecompiler.decompileInFolder",
+                "title": "Decompile .class files in Folder"
+            }
+        ],
+		"menus": {
+			"explorer/context": [
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "javaCFRDecompiler.decompileInFolder",
+                    "group": "z_commands"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
