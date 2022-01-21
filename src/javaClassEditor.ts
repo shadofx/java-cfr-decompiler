@@ -46,7 +46,7 @@ export class JavaClassEditorProvider implements vscode.CustomReadonlyEditorProvi
 				if(webviewPanel) webviewPanel.webview.html += `<code>${content}<code>`;
 			}
 			const file = await vscode.workspace.openTextDocument(newfileuri);
-			const editor = await vscode.window.showTextDocument(file,1,false);
+			const editor = await vscode.window.showTextDocument(file,1,webviewPanel == null);
 			if(!fileExists){
 				await editor.edit(edit=>{
 					edit.delete(//Delete the entire contents of the file
