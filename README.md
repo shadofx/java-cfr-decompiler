@@ -32,4 +32,4 @@ Running that command will create new `.java` files next to each `.class` file. T
 
 Example files are in the `exampleFiles` directory.
 
-`vsce package` to create `.vsix` for distribution
+`vsce package` to create `.vsix` for distribution.
